@@ -1,128 +1,231 @@
-# ORIGINATING-ADDRESS-CLEANER-TOOL
+# Originating Address ETL Pipeline
 
-*Streamline Addresses cleaning, Accelerate Success, Ensure Precision.*
-
-![Last Commit](https://img.shields.io/github/last-commit/AshleyMathebula/Originating-Address-Cleaner-Tool?color=blue)
-![Python](https://img.shields.io/badge/python-100%25-blue)
-![Language Count](https://img.shields.io/github/languages/count/AshleyMathebula/Originating-Address-Cleaner-Tool?color=brightgreen)
+A Python ETL project that extracts originating addresses from a PostgreSQL database, transforms them into the required platform upload format, and loads the final results into a text file.
 
 ---
 
-### Built:
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+# ETL Flow
 
-
-
----
-
-## 🗂️ Table of Contents
-
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Usage](#usage)
-- [Directory Structure](#directory-structure)
-- [Logging](#logging)
-- [License](#license)
+```text
+Extract  →  Transform  →  Load
+Database →  Format     →  Text File
+```
 
 ---
 
-## 🧩 Overview
+# What the Project Does
 
-The **Originating Address Cleaner Tool** is a robust utility for **validating**, **formatting**, and **deduplicating** raw originating address data.  
-It transforms unstructured input files into clean, standardized datasets ready for upload or system integration.
+The tool allows a user to enter a `service_id` through the CLI.
 
-This tool implements a **Linear ETL (Extract, Transform, Load)** pipeline:
-- **Extract:** Reads address data from text files.  
-- **Transform:** Cleans, validates, and formats using pattern recognition and deduplication logic.  
-- **Load:** Writes the final output to structured text files, logging all operations.
+It then:
 
-This design ensures **data integrity**, **traceability**, and **automation-readiness** for large-scale data preprocessing tasks.
-
----
-
-### 💡 Why Originating-Address-Cleaner-Tool?
-
-This project simplifies address preprocessing workflows by ensuring data integrity and consistency across environments.
-
-**Core Features:**
-- Reads flexible input formats (line-based, comma, semicolon, or space-separated)
-- Cleans invalid characters and detects `?*` patterns
-- Removes duplicates and invalid data
-- Converts cleaned data to regex upload format
-- Logs all activity for full traceability
-
-## 🚀 Getting Started
-
-### 🧰 Prerequisites
-
-This project requires the following dependencies:
-
-- **Programming Language:** Python 3.9+
-- **Package Manager:** pip
+1. Extracts originating addresses from PostgreSQL
+2. Cleans and validates the addresses
+3. Removes duplicates
+4. Converts wildcard patterns
+5. Formats addresses into platform-ready regex format
+6. Writes the final output to a `.txt` file
 
 ---
 
-### ⚙️ Installation
+# Example Transformation
 
-Build **Originating-Address-Cleaner-Tool** from source and install dependencies.
+## Input
 
-1. **Clone the repository:**
+```text
+PROMO?*
+```
 
-   ```bash
-   git clone https://github.com/AshleyMathebula/Originating-Address-Cleaner-Tool
-   
-2. **Navigate to the project directory:**
+## Output
 
-    ```bash
-    cd Originating-Address-Cleaner-Tool
+```text
+regex 1,1,PROMO[0-9]*
+```
 
-3. **Install the dependencies:**
+---
 
-    ```bash
-    pip install -r requirements.txt
+# Project Structure
 
-## ▶️ Usage
-Run the tool to execute the complete ETL pipeline:
+```text
+originating-address-etl/
+├── extract/
+│   └── db_extractor.py
+├── transform/
+│   ├── formatter.py
+│   └── validator.py
+├── load/
+│   └── file_writer.py
+├── utils/
+│   └── logger.py
+├── tests/
+│   ├── test_db_extractor.py
+│   ├── test_file_writer.py
+│   ├── test_formatter.py
+│   └── test_validator.py
+├── main.py
+├── requirements.txt
+├── pytest.ini
+└── README.md
+```
 
-    bash
-    python main.py
-    
-Default paths:
+---
 
-    Input: data/input_addresses.txt
-    
-    Output: output/cleaned_addresses.txt
-    
-    Logs: logs/activity.log
+# Tech Stack
 
-Example output:
+- Python
+- PostgreSQL
+- Neon Database
+- Psycopg
+- Pytest
+- Python-dotenv
 
-    regex 1,1,ABC123
-    regex 1,1,XYZ[0-9]*
-    regex 1,1,DEF001
+---
 
-## 🧾 Logging
+# Environment Variables
 
-All tool activities are logged both to console and file (logs/activity.log):
+Create a `.env` file:
 
-Log Levels:
+```env
+DATABASE_URL=your_postgresql_connection_string
+TEST_SERVICE_ID=TEST_SERVICE
+```
 
-    [INFO] General information (file loaded, steps completed)
-    
-    [SUCCESS] Successful operations
-    
-    [WARN] Skipped or invalid data entries
-    
-    [ERROR] File or runtime errors
+Do not commit `.env` to GitHub.
 
-Example Log:
+---
 
-    2025-10-27 | INFO | Loaded 534 addresses from data/input_addresses.txt
-    2025-10-27 | INFO | Found 12 duplicate(s)
-    2025-10-27 | SUCCESS | Cleaned addresses written to output/cleaned_addresses.txt
+# Installation
 
-## 🪪 License
+## Create a Virtual Environment
 
-This project is developed and maintained by Ashley Mathebula.
+```bash
+python -m venv venv
+```
+
+## Activate the Virtual Environment
+
+### Windows PowerShell
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+## Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# Run the ETL
+
+```bash
+python main.py
+```
+
+Enter a service ID when prompted:
+
+```text
+Enter Service ID: TEST_SERVICE
+```
+
+The output file will be created here:
+
+```text
+output/cleaned_addresses.txt
+```
+
+---
+
+# Run Tests
+
+## Run All Tests
+
+```bash
+pytest
+```
+
+## Run Transform and Load Tests
+
+```bash
+pytest tests/test_formatter.py tests/test_validator.py tests/test_file_writer.py
+```
+
+## Run Database Extraction Test
+
+```bash
+pytest tests/test_db_extractor.py
+```
+
+---
+
+# Tested ETL Stages
+
+| Stage | Tested | Description |
+|---|---|---|
+| Extract | Yes | Tests database extraction |
+| Transform | Yes | Tests validation, deduplication, and formatting |
+| Load | Yes | Tests text file generation |
+
+---
+
+# Logging
+
+The project logs ETL status messages for:
+
+```text
+START
+INPUT
+EXTRACT
+TRANSFORM
+LOAD
+END
+FAILED
+```
+
+Logs are written to:
+
+```text
+logs/activity.log
+```
+
+---
+
+# Output Format
+
+Each cleaned address is written as:
+
+```text
+regex 1,1,<originating_address>
+```
+
+Wildcard addresses are converted from:
+
+```text
+PROMO?*
+```
+
+to:
+
+```text
+regex 1,1,PROMO[0-9]*
+```
+
+---
+
+# Project Purpose
+
+This project demonstrates:
+
+- Database-driven extraction
+- ETL pipeline design
+- Modular Python architecture
+- SQL querying
+- Data validation
+- File generation
+- Logging
+- Automated testing
+- Real-world operational workflow
+
+---
