@@ -1,52 +1,117 @@
 # Originating Address ETL Pipeline
 
-A Python ETL project that extracts originating addresses from a PostgreSQL database, transforms them into the required platform upload format, and loads the final results into a text file.
+Extracts originating addresses from PostgreSQL, transforms them into platform-ready regex format, and writes the results to a text file.
 
 ---
 
-# ETL Flow
+## ETL Flow
 
-```text
-Extract  →  Transform  →  Load
-Database →  Format     →  Text File
+```
+Extract → Transform → Load
+PostgreSQL → Clean / Format → .txt File
 ```
 
 ---
 
-# What the Project Does
+## Usage
 
-The tool allows a user to enter a `service_id` through the CLI.
+Run the pipeline and enter a service ID when prompted:
 
-It then:
+```bash
+python main.py
+```
 
-1. Extracts originating addresses from PostgreSQL
-2. Cleans and validates the addresses
+```text
+Enter Service ID: TEST_SERVICE
+```
+
+Output is written to:
+
+```text
+output/cleaned_addresses.txt
+```
+
+---
+
+## What It Does
+
+Given a `service_id`, the pipeline:
+
+1. Queries originating addresses from PostgreSQL
+2. Validates and cleans addresses
 3. Removes duplicates
-4. Converts wildcard patterns
-5. Formats addresses into platform-ready regex format
-6. Writes the final output to a `.txt` file
+4. Converts wildcard patterns to regex
+5. Writes platform-ready output to a `.txt` file
+
+**Transformation example:**
+
+| Input | Output |
+|---|---|
+| `PROMO?*` | `regex 1,1,PROMO[0-9]*` |
 
 ---
 
-# Example Transformation
+## Setup
 
-## Input
+### 1. Create and activate a virtual environment
 
-```text
-PROMO?*
+```bash
+python -m venv venv
 ```
 
-## Output
-
-```text
-regex 1,1,PROMO[0-9]*
+**Windows PowerShell:**
+```powershell
+.\venv\Scripts\Activate.ps1
 ```
+
+**macOS / Linux:**
+```bash
+source venv/bin/activate
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file in the project root:
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+TEST_SERVICE_ID=TEST_SERVICE
+```
+
+> Do not commit `.env` to version control.
 
 ---
 
-# Project Structure
+## Running Tests
 
-```text
+```bash
+# All tests
+pytest
+
+# Transform and load only
+pytest tests/test_formatter.py tests/test_validator.py tests/test_file_writer.py
+
+# Database extraction only
+pytest tests/test_db_extractor.py
+```
+
+| Stage | Tested | Description |
+|---|---|---|
+| Extract | ✅ | Database extraction |
+| Transform | ✅ | Validation, deduplication, formatting |
+| Load | ✅ | Text file generation |
+
+---
+
+## Project Structure
+
+```
 originating-address-etl/
 ├── extract/
 │   └── db_extractor.py
@@ -70,162 +135,45 @@ originating-address-etl/
 
 ---
 
-# Tech Stack
+## Tech Stack
 
-- Python
-- PostgreSQL
-- Neon Database
-- Psycopg
-- Pytest
-- Python-dotenv
-
----
-
-# Environment Variables
-
-Create a `.env` file:
-
-```env
-DATABASE_URL=your_postgresql_connection_string
-TEST_SERVICE_ID=TEST_SERVICE
-```
-
-Do not commit `.env` to GitHub.
+- **Python** — core language
+- **PostgreSQL / Neon** — source database
+- **Psycopg** — database driver
+- **pytest** — test framework
+- **python-dotenv** — environment config
 
 ---
 
-# Installation
+## Database Query
 
-## Create a Virtual Environment
-
-```bash
-python -m venv venv
-```
-
-## Activate the Virtual Environment
-
-### Windows PowerShell
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-## Install Dependencies
-
-```bash
-pip install -r requirements.txt
+```sql
+SELECT originating_address
+FROM service_subscriptions
+WHERE service_id = %s
+  AND originating_address IS NOT NULL
+ORDER BY created_at DESC;
 ```
 
 ---
 
-# Run the ETL
+## Logging
 
-```bash
-python main.py
+ETL status is logged to `logs/activity.log` across these stages:
+
 ```
-
-Enter a service ID when prompted:
-
-```text
-Enter Service ID: TEST_SERVICE
-```
-
-The output file will be created here:
-
-```text
-output/cleaned_addresses.txt
+START → INPUT → EXTRACT → TRANSFORM → LOAD → END
+                                             ↓
+                                           FAILED (on error)
 ```
 
 ---
 
-# Run Tests
+## Future Improvements
 
-## Run All Tests
-
-```bash
-pytest
-```
-
-## Run Transform and Load Tests
-
-```bash
-pytest tests/test_formatter.py tests/test_validator.py tests/test_file_writer.py
-```
-
-## Run Database Extraction Test
-
-```bash
-pytest tests/test_db_extractor.py
-```
-
----
-
-# Tested ETL Stages
-
-| Stage | Tested | Description |
-|---|---|---|
-| Extract | Yes | Tests database extraction |
-| Transform | Yes | Tests validation, deduplication, and formatting |
-| Load | Yes | Tests text file generation |
-
----
-
-# Logging
-
-The project logs ETL status messages for:
-
-```text
-START
-INPUT
-EXTRACT
-TRANSFORM
-LOAD
-END
-FAILED
-```
-
-Logs are written to:
-
-```text
-logs/activity.log
-```
-
----
-
-# Output Format
-
-Each cleaned address is written as:
-
-```text
-regex 1,1,<originating_address>
-```
-
-Wildcard addresses are converted from:
-
-```text
-PROMO?*
-```
-
-to:
-
-```text
-regex 1,1,PROMO[0-9]*
-```
-
----
-
-# Project Purpose
-
-This project demonstrates:
-
-- Database-driven extraction
-- ETL pipeline design
-- Modular Python architecture
-- SQL querying
-- Data validation
-- File generation
-- Logging
-- Automated testing
-- Real-world operational workflow
-
----
+- Timestamped output files
+- ETL run summary report
+- Audit table for run history
+- CLI arguments in place of manual input
+- Optional FastAPI layer
+- Scheduled execution
