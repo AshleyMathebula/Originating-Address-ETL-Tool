@@ -145,18 +145,6 @@ originating-address-etl/
 
 ---
 
-## Database Query
-
-```sql
-SELECT originating_address
-FROM service_subscriptions
-WHERE service_id = %s
-  AND originating_address IS NOT NULL
-ORDER BY created_at DESC;
-```
-
----
-
 ## Logging
 
 ETL status is logged to `logs/activity.log` across these stages:
@@ -166,14 +154,3 @@ START → INPUT → EXTRACT → TRANSFORM → LOAD → END
                                              ↓
                                            FAILED (on error)
 ```
-
----
-
-## Future Improvements
-
-- Timestamped output files
-- ETL run summary report
-- Audit table for run history
-- CLI arguments in place of manual input
-- Optional FastAPI layer
-- Scheduled execution
